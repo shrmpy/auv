@@ -2,8 +2,9 @@ FROM ubuntu:xenial
 
 ARG VNC_PASSWORD=secret
 ENV VNC_PASSWORD=${VNC_PASSWORD} \
-    HOME=/root 
-WORKDIR ${HOME}
+    WSPC=/root/catkin_ws \
+    DEBIAN_FRONTEND=noninteractive
+WORKDIR /root
 
 # Allow universe and multiverse repos
 RUN apt-get update; apt-get install -y software-properties-common wget; \
@@ -37,12 +38,12 @@ CMD ["/usr/bin/supervisord","-c","/etc/supervisor/conf.d/supervisord.conf"]
 
 # Download UUV (todo as non-root)
 RUN rosdep update; \
-    mkdir -p /root/catkin_ws/src; . /opt/ros/lunar/setup.sh; \
-    rosinstall /root/catkin_ws/src /opt/ros/lunar https://raw.githubusercontent.com/uuvsimulator/uuv_simulator/master/ros_lunar.rosinstall; \
-    . /root/catkin_ws/src/setup.sh; \
-    rosdep install --from-paths /root/catkin_ws/src --ignore-src --rosdistro=lunar -y --skip-keys \
+    mkdir -p ${WSPC}/src; . /opt/ros/lunar/setup.sh; \
+    rosinstall ${WSPC}/src /opt/ros/lunar https://raw.githubusercontent.com/uuvsimulator/uuv_simulator/master/ros_lunar.rosinstall; \
+    . ${WSPC}/src/setup.sh; \
+    rosdep install --from-paths ${WSPC}/src --ignore-src --rosdistro=lunar -y --skip-keys \
                            "gazebo gazebo_msgs gazebo_plugins gazebo_ros gazebo_ros_control gazebo_ros_pkgs"; \
-    cd /root/catkin_ws; catkin_make install;
+    cd ${WSPC}; catkin_make install;
 
-##                    . /usr/share/gazebo-9/setup.sh; . /opt/ros/lunar/setup.sh; . /root/catkin_ws/devel/setup.sh;"
+##                    . /usr/share/gazebo-9/setup.sh; . /opt/ros/lunar/setup.sh; . ${WSPC}/devel/setup.sh;"
 
