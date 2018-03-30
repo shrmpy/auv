@@ -17,13 +17,13 @@ RUN apt-get update; apt-get install -y software-properties-common wget; \
 
 # Install dependencies
 RUN apt-get update; apt-get install -y \
-                    dbus-x11 x11vnc xvfb supervisor \
-                    dwm suckless-tools stterm \
-                    ros-lunar-desktop \
-                    gazebo9 libgazebo9-dev \
-                    ros-lunar-gazebo9-* \
-                    python-rosdep python-rosinstall python-rosinstall-generator python-wstool build-essential; \ 
-    rosdep init; \
+    dbus-x11 x11vnc xvfb supervisor \
+    dwm suckless-tools stterm \
+    ros-lunar-desktop \
+    gazebo9 libgazebo9-dev \
+    ros-lunar-gazebo9-* \
+    ros-lunar-joystick-drivers ros-lunar-geographic-msgs \
+    python-rosdep python-rosinstall python-rosinstall-generator python-wstool build-essential; \ 
     mkdir -p /etc/supervisor/conf.d; \
     x11vnc -storepasswd $VNC_PASSWORD /etc/vncsecret; \
     chmod 444 /etc/vncsecret; 
@@ -37,13 +37,14 @@ EXPOSE 5900
 CMD ["/usr/bin/supervisord","-c","/etc/supervisor/conf.d/supervisord.conf"]
 
 # Download UUV (todo as non-root)
-RUN rosdep update; \
-    mkdir -p ${WSPC}/src; . /opt/ros/lunar/setup.sh; \
-    rosinstall ${WSPC}/src /opt/ros/lunar https://raw.githubusercontent.com/uuvsimulator/uuv_simulator/master/ros_lunar.rosinstall; \
+RUN mkdir -p ${WSPC}/src; cd ${WSPC}; \
+    . /opt/ros/lunar/setup.sh; . /usr/share/gazebo-9/setup.sh; \
+    rosdep init; rosdep update; \
+    catkin_make; . ${WSPC}/devel/setup.sh; \
+    git clone https://github.com/uuvsimulator/uuv_simulator.git src/uuv_simulator; \
+    rosinstall src /opt/ros/lunar https://raw.githubusercontent.com/uuvsimulator/uuv_simulator/master/ros_lunar.rosinstall; \
+    rosdep install --from-paths src --ignore-src --rosdistro=lunar -y --skip-keys "gazebo gazebo_msgs gazebo_plugins gazebo_ros gazebo_ros_control gazebo_ros_pkgs"; \
     . ${WSPC}/src/setup.sh; \
-    rosdep install --from-paths ${WSPC}/src --ignore-src --rosdistro=lunar -y --skip-keys \
-                           "gazebo gazebo_msgs gazebo_plugins gazebo_ros gazebo_ros_control gazebo_ros_pkgs"; \
     cd ${WSPC}; catkin_make install;
 
-##                    . /usr/share/gazebo-9/setup.sh; . /opt/ros/lunar/setup.sh; . ${WSPC}/devel/setup.sh;"
 

@@ -47,17 +47,19 @@ acbuild set-exec -- /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.c
 # Download UUV
 acbuild --debug run -- rosdep init
 acbuild --debug run -- rosdep update
-acbuild --debug run -- /bin/sh -c 'mkdir -p /root/catkin_ws/src; . /opt/ros/lunar/setup.sh; \
-                    rosinstall /root/catkin_ws/src /opt/ros/lunar https://raw.githubusercontent.com/uuvsimulator/uuv_simulator/master/ros_lunar.rosinstall; \
-                    . /root/catkin_ws/src/setup.sh; \
-                    rosdep install --from-paths /root/catkin_ws/src --ignore-src --rosdistro=lunar -y --skip-keys \
+acbuild --debug run -- /bin/bash -c 'mkdir -p /root/catkin_ws/src; . /opt/ros/lunar/setup.sh; \
+                    cd /root/catkin_ws; catkin_make; \
+                    git clone https://github.com/uuvsimulator/uuv_simulator.git src/uuv_simulator; \
+                    rosinstall src /opt/ros/lunar https://raw.githubusercontent.com/uuvsimulator/uuv_simulator/master/ros_lunar.rosinstall; \
+                    . /usr/share/gazebo-9/setup.sh; . /opt/ros/lunar/setup.bash; . devel/setup.bash; \
+                    . src/setup.bash; \
+                    rosdep install --from-paths src --ignore-src --rosdistro=lunar -y --skip-keys \
                            "gazebo gazebo_msgs gazebo_plugins gazebo_ros gazebo_ros_control gazebo_ros_pkgs"; \
                     cd /root/catkin_ws; catkin_make install;' 
 
-##                    . /usr/share/gazebo-9/setup.sh; . /opt/ros/lunar/setup.sh; . /root/catkin_ws/devel/setup.sh;"
 
 # Write the result
 acbuild --debug set-name uuv
-acbuild --debug label add version 0.0.20
-acbuild --debug write --overwrite uuv-0.0.20-linux-amd64.aci
+acbuild --debug label add version 0.0.21
+acbuild --debug write --overwrite uuv-0.0.21-linux-amd64.aci
 
